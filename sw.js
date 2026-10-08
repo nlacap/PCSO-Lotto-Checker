@@ -1,5 +1,5 @@
-const CACHE='pcso-lotto-v6';
-const ASSETS=['./app.js','./manifest.webmanifest','./digitalrose-logo-v5.png'];
+const CACHE='pcso-lotto-v7';
+const ASSETS=['./app.js','./manifest.webmanifest','./digitalrose-logo-v6.png'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(
