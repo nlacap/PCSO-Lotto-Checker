@@ -10,6 +10,7 @@ index.html            page markup only
 css/styles.css        all styling
 js/config.js          games, number ranges, draw days, prize tiers, version
 js/validation.js      pure validation + matching logic (no DOM) — unit tested
+js/ticketParser.js    reads bets from scanned/pasted ticket text — unit tested
 js/storage.js         load/save, schema repair, migration of old saved data
 js/picker.js          number-board overlay
 js/status.js          status message box
@@ -29,6 +30,13 @@ tests/                node:test unit tests
 - Warnings (not blocking): draw date in the future, date not on the game's usual draw day, two identical bets.
 - Saved data is checked and repaired on load; damaged data is reset with a backup copy kept
   (`pcso-lotto-checker-v1.backup`). Save failures (Private Browsing, storage full) are shown, not hidden.
+
+## Scan or paste
+
+- **Whole ticket:** open "Scan or paste your ticket", tap the box, choose *Scan Text* (iPhone Live Text) and point at the ticket, then FILL BETS.
+  Each line with six numbers (or a line starting A–F) becomes a bet; the game is read from the ticket when printed (6/49, SUPER, …).
+  Lines that fail validation are listed, never silently kept.
+- **One row:** paste or scan `05-12-23-34-40-41` (any separators) into the first box of a row and it spreads across all six.
 
 ## Tests
 

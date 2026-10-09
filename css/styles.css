@@ -324,3 +324,29 @@ input[type=date] {
 .saved.warn {
   color: #ffcf66;
 }
+
+/* ---- scan / paste ticket ---- */
+.quick {
+  border: 1px dashed var(--line);
+  border-radius: 14px;
+  padding: 10px 11px;
+  margin-top: 10px;
+  background: #081a36;
+}
+.quick summary {
+  font-weight: 850;
+  font-size: 14px;
+  cursor: pointer;
+  color: #6dd4ff;
+}
+.quick textarea {
+  width: 100%;
+  margin-top: 8px;
+  font: 600 16px/1.4 ui-monospace, Menlo, monospace;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #5277a5;
+  background: #0b2448;
+  color: white;
+  resize: vertical;
+}

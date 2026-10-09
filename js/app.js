@@ -9,6 +9,7 @@ import { loadState, saveState, blankBets, blankRow } from './storage.js';
 import { $, $$, el } from './dom.js';
 import { setStatus } from './status.js';
 import { createPicker } from './picker.js';
+import { splitNumbers, parseTicket } from './ticketParser.js';
 
 // ---------------------------------------------------------------- state
 
@@ -43,7 +44,6 @@ function cellInputs(rowKey, labelPrefix) {
     type: 'text',
     inputmode: 'numeric',
     pattern: '[0-9]*',
-    maxlength: 2,
     autocomplete: 'off',
     placeholder: j + 1,
     'aria-label': `${labelPrefix} number ${j + 1}`,
@@ -109,8 +109,33 @@ function clearResults() {
 
 // ---------------------------------------------------------------- events
 
+/** Several numbers pasted/scanned into one box: spread them across the row. */
+function spreadAcrossRow(x) {
+  const parts = splitNumbers(x.value, { expandRuns: true });
+  if (parts.length < 2) return false;
+  const key = x.dataset.row === 'w' ? 'w' : Number(x.dataset.row);
+  const start = parts.length >= PICK_COUNT ? 0 : Number(x.dataset.j);
+  const cells = rowCells(key);
+  const inputs = rowInputs(key);
+  parts.slice(0, PICK_COUNT - start).forEach((v, k) => {
+    cells[start + k] = v;
+    inputs[start + k].value = v;
+  });
+  if (start === 0 && parts.length >= PICK_COUNT) inputs.forEach((inp, j) => { if (j >= parts.length) { cells[j] = ''; inp.value = ''; } });
+  persist();
+  clearResults();
+  liveValidate(key);
+  const extra = parts.length - (PICK_COUNT - start);
+  setStatus(extra > 0 ? 'warn' : 'info',
+    `Filled ${Math.min(parts.length, PICK_COUNT - start)} numbers into ${key === 'w' ? 'the winning numbers' : 'Bet ' + (key + 1)}.` +
+    (extra > 0 ? ` ${extra} extra number${extra > 1 ? 's were' : ' was'} ignored.` : ''));
+  inputs[Math.min(start + parts.length, PICK_COUNT) - 1]?.blur();
+  return true;
+}
+
 function onCellInput(e) {
   const x = e.target;
+  if (spreadAcrossRow(x)) return;
   const clean = sanitizeInput(x.value);
   if (clean !== x.value) x.value = clean;
 
@@ -188,6 +213,14 @@ function wire() {
 
   $('#compare').addEventListener('click', compare);
 
+  $('#fillBets').addEventListener('click', fillFromTicket);
+  $('#ticketText').addEventListener('input', () => { $('#ticketHint').textContent = ''; });
+  $('#clearTicket').addEventListener('click', () => {
+    $('#ticketText').value = '';
+    $('#ticketHint').textContent = '';
+    $('#ticketText').focus();
+  });
+
   // keep two open tabs in sync
   window.addEventListener('storage', e => {
     if (e.key !== STORAGE_KEY) return;
@@ -195,6 +228,46 @@ function wire() {
     render();
     setStatus('info', 'Updated with changes made in another tab.');
   });
+}
+
+function fillFromTicket() {
+  const text = $('#ticketText').value;
+  const hint = $('#ticketHint');
+  hint.className = 'hint';
+  if (!text.trim()) { hint.textContent = 'Scan or paste your ticket first.'; return; }
+
+  const r = parseTicket(text, state.game);
+  if (!r.bets.length) {
+    hint.textContent = 'No complete bets found. Each bet needs six numbers on one line.' +
+      (r.rejected.length ? ' Problems: ' + r.rejected.join(' ') : '');
+    return;
+  }
+  if (r.gameIndex !== state.game) {
+    if (!confirm(`This ticket looks like ${GAMES[r.gameIndex].name}. Switch to that game?`)) {
+      // stay on the current game, but only keep bets valid for it
+      const again = parseTicket(text.replace(/6\s*\/\s*\d\d|ULTRA|GRAND|SUPER|MEGA/gi, ''), state.game);
+      return applyBets(again, hint, state.game);
+    }
+  }
+  applyBets(r, hint, r.gameIndex);
+}
+
+function applyBets(r, hint, gameIndex) {
+  const target = state.byGame[gameIndex];
+  const name = GAMES[gameIndex].name;
+  if (!r.bets.length) { hint.textContent = 'No bets on this ticket fit ' + name + '.'; return; }
+  if (target.bets.flat().some(Boolean) && !confirm(`Replace the current ${name} bets with the ${r.bets.length} from the ticket?`)) return;
+  state.game = gameIndex;
+  draw().bets = blankBets();
+  r.bets.forEach((nums, i) => { draw().bets[i] = nums.map(String); });
+  persist();
+  render();
+  const notes = [...r.rejected];
+  if (r.overflow) notes.push(`${r.overflow} more bet${r.overflow > 1 ? 's' : ''} did not fit (6 slots).`);
+  hint.className = notes.length ? 'hint warn' : 'hint';
+  hint.textContent = notes.length ? 'Skipped: ' + notes.join(' ') : '';
+  setStatus(notes.length ? 'warn' : 'success',
+    `Filled ${r.bets.length} bet${r.bets.length > 1 ? 's' : ''} for ${game().name}${r.gameDetected ? ' (game read from ticket)' : ''}. Please check them against your ticket.`, notes);
 }
 
 function afterEdit(message) {

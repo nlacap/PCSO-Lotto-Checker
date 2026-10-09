@@ -40,7 +40,17 @@
 
     <section class="card">
       <div class="title">1. Enter Your Bet Numbers</div>
-      <div class="help">Type six numbers or use SELECT ON NUMBER BOARD.</div>
+      <div class="help">Type six numbers, use SELECT ON NUMBER BOARD, or scan your ticket below.</div>
+      <details class="quick" id="quickFill">
+        <summary>📷 Scan or paste your ticket</summary>
+        <div class="help">Tap the box, then choose <b>Scan Text</b> and point the camera at your ticket — or paste the numbers. One bet per line. Check the result before comparing.</div>
+        <textarea id="ticketText" rows="5" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="A 03 11 19 27 38 45&#10;B 07 14 22 30 41 49"></textarea>
+        <div class="hint" id="ticketHint" aria-live="polite"></div>
+        <div class="actions">
+          <button type="button" class="action" id="fillBets">FILL BETS</button>
+          <button type="button" class="action secondary" id="clearTicket">Clear Text</button>
+        </div>
+      </details>
       <div id="bets"></div>
       <div class="actions">
         <button type="button" class="action danger" id="clearBets">Clear Bets</button>
@@ -49,7 +59,7 @@
 
     <section class="card">
       <div class="title">2. Enter Winning Numbers</div>
-      <div class="help">Type the six official winning numbers or select them on the board.</div>
+      <div class="help">Type the six official winning numbers or select them on the board. You can also paste all six at once (e.g. 05-12-23-34-40-41) into the first box.</div>
       <div class="six" id="wins"></div>
       <div class="hint" id="winHint" aria-live="polite"></div>
       <button type="button" class="action winBtn" id="pickWin">🏆 SELECT WINNING NUMBERS ON BOARD</button>
