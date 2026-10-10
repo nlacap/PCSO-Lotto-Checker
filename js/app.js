@@ -7,6 +7,7 @@ import {
 } from './validation.js';
 import { loadState, saveState, blankBets, blankRow, loadResults, saveResults, mergeResults, findResult, latestResult } from './storage.js';
 import { parseResults } from './resultsParser.js';
+import { luckyPick } from './luckyPick.js';
 import { $, $$, el } from './dom.js';
 import { setStatus } from './status.js';
 import { createPicker } from './picker.js';
@@ -57,7 +58,10 @@ function build() {
     el('div', { class: 'bet' }, [
       el('div', { class: 'betHead' }, [
         el('strong', {}, `Bet ${i + 1}`),
-        el('button', { class: 'pickBet', type: 'button', 'data-i': i }, 'SELECT ON NUMBER BOARD'),
+        el('div', { class: 'betBtns' }, [
+          el('button', { class: 'luckyBet', type: 'button', 'data-i': i, 'aria-label': `Lucky Pick for Bet ${i + 1}` }, '🎲 LUCKY PICK'),
+          el('button', { class: 'pickBet', type: 'button', 'data-i': i }, 'NUMBER BOARD'),
+        ]),
       ]),
       el('div', { class: 'six' }, cellInputs(i, `Bet ${i + 1}`)),
       el('div', { class: 'hint', id: `hint${i}`, 'aria-live': 'polite' }),
@@ -246,6 +250,8 @@ function wire() {
   document.addEventListener('focusin', e => { if (e.target.classList?.contains('cell')) e.target.select?.(); });
 
   $('#bets').addEventListener('click', e => {
+    const lucky = e.target.closest('.luckyBet');
+    if (lucky) { luckyBet(Number(lucky.dataset.i)); return; }
     const b = e.target.closest('.pickBet');
     if (!b) return;
     const i = Number(b.dataset.i);
@@ -263,6 +269,8 @@ function wire() {
     max: game().max,
     onSave: nums => { draw().wins = nums.map(String); afterEdit('Winning numbers saved.'); },
   }));
+
+  $('#luckyEmpty').addEventListener('click', luckyEmptyBets);
 
   $('#clearBets').addEventListener('click', () => {
     if (hasAnyBet() && !confirm('Clear all bets for ' + game().name + '?')) return;
@@ -433,6 +441,48 @@ function importResults() {
     `Saved ${parsed.results.length} PCSO result${parsed.results.length > 1 ? 's' : ''}` +
     (auto === 'filled' ? ' and filled the winning numbers.' : '.') + ' Please check them against the official results.',
     [...list, ...notes]);
+}
+
+// ---------------------------------------------------------------- Lucky Pick
+
+const fmtPick = nums => nums.map(n => String(n).padStart(2, '0')).join('-');
+
+function flashBet(i) {
+  const row = $('#bets').children[i];
+  row?.classList.remove('lucky');
+  void row?.offsetWidth; // restart the animation
+  row?.classList.add('lucky');
+}
+
+function makePick() {
+  try { return luckyPick(game().max); }
+  catch (e) { setStatus('error', 'Lucky Pick is not available: ' + e.message); return null; }
+}
+
+function luckyBet(i) {
+  const has = draw().bets[i].some(Boolean);
+  if (has && !confirm(`Replace Bet ${i + 1} with a Lucky Pick?`)) return;
+  const nums = makePick();
+  if (!nums) return;
+  draw().bets[i] = nums.map(String);
+  afterEdit(`🎲 Bet ${i + 1} Lucky Pick: ${fmtPick(nums)}`);
+  flashBet(i);
+}
+
+function luckyEmptyBets() {
+  const empty = draw().bets.map((b, i) => (b.some(Boolean) ? -1 : i)).filter(i => i >= 0);
+  if (!empty.length) { setStatus('info', 'All six bets already have numbers. Use 🎲 on a bet to replace it.'); return; }
+  const lines = [];
+  for (const i of empty) {
+    const nums = makePick();
+    if (!nums) return;
+    draw().bets[i] = nums.map(String);
+    lines.push(`Bet ${i + 1}: ${fmtPick(nums)}`);
+  }
+  persist();
+  render();
+  empty.forEach(flashBet);
+  setStatus('success', `🎲 Lucky Pick filled ${empty.length} empty bet${empty.length > 1 ? 's' : ''}.`, lines);
 }
 
 function afterEdit(message) {

@@ -229,7 +229,7 @@ def main():
         r.caption(4, "Mistakes turn red right away", "Here 14 was entered twice.")
         r.type_cells(4, ["14", "14"])
         r.hold(2.6)
-        r.caption(4, "Or pick on the number board", "Tap SELECT ON NUMBER BOARD.")
+        r.caption(4, "Or pick on the number board", "Tap NUMBER BOARD.")
         r.tap('.pickBet[data-i="4"]')
         r.caption(4, "Tap six numbers, then SAVE", "Numbers outside the game's range are hidden.", pos="top")
         r.tap("#pickerClear")
@@ -238,6 +238,13 @@ def main():
         r.hold(0.8)
         r.tap("#pickerSave")
         r.hold(1.8)
+
+        # ---- 4b. Lucky Pick
+        r.caption(4, "Or let it pick for you", "🎲 LUCKY PICK draws six truly random numbers.")
+        r.scroll_to("#bets .bet:nth-child(6)", 0.22)
+        r.hold(1.4)
+        r.tap('.luckyBet[data-i="5"]')
+        r.hold(2.4)
 
         # ---- 5. official results
         r.scroll_to("#resultsFill", 0.14)

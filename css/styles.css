@@ -419,3 +419,46 @@ input[type=date] {
 .action:disabled {
   opacity: .45;
 }
+
+/* ---- Lucky Pick ---- */
+.betBtns {
+  display: flex;
+  gap: 6px;
+}
+.luckyBet {
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 9px;
+  background: linear-gradient(135deg, #7b3fe4, #b05cf0);
+  color: white;
+  font-weight: 850;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.pickBet {
+  white-space: nowrap;
+}
+.action.lucky {
+  background: linear-gradient(135deg, #7b3fe4, #b05cf0);
+}
+.bet.lucky {
+  animation: luckyGlow 1.2s ease-out;
+}
+@keyframes luckyGlow {
+  0% { box-shadow: 0 0 0 0 #b05cf0cc; border-color: #d9a6ff; }
+  100% { box-shadow: 0 0 0 14px #b05cf000; }
+}
+.pickTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 7px 0 10px;
+}
+.pickTop .counter {
+  margin: 0;
+}
+.pickTop .action {
+  flex: none;
+  padding: 9px 11px;
+}

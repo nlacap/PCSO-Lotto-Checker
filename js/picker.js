@@ -3,6 +3,7 @@
 
 import { $, el } from './dom.js';
 import { PICK_COUNT, MAX_NUMBER } from './config.js';
+import { luckyPick } from './luckyPick.js';
 
 export function createPicker() {
   const overlay = $('#overlay');
@@ -22,6 +23,7 @@ export function createPicker() {
   function draw(message) {
     const full = picked.length >= PICK_COUNT;
     counter.textContent = message ?? `${picked.length} of ${PICK_COUNT} selected`;
+    $('#pickerLucky').disabled = full;
     for (const b of grid.children) {
       const n = Number(b.dataset.n);
       const sel = picked.includes(n);
@@ -74,6 +76,13 @@ export function createPicker() {
     if (b && !b.disabled) toggle(Number(b.dataset.n));
   });
   $('#pickerClear').addEventListener('click', () => { picked = []; draw(); });
+  $('#pickerLucky').addEventListener('click', () => {
+    try {
+      const before = picked.length;
+      picked = luckyPick(max, { keep: picked });
+      draw(before ? `🎲 Kept your ${before}, picked ${PICK_COUNT - before} at random.` : '🎲 Lucky Pick: 6 random numbers.');
+    } catch (e) { draw('Lucky Pick is not available: ' + e.message); }
+  });
   $('#pickerCancel').addEventListener('click', close);
   $('#pickerSave').addEventListener('click', save);
   overlay.addEventListener('click', e => { if (e.target === overlay) close(); });

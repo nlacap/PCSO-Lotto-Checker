@@ -40,7 +40,7 @@
 
     <section class="card">
       <div class="title">1. Enter Your Bet Numbers</div>
-      <div class="help">Type six numbers, use SELECT ON NUMBER BOARD, or scan your ticket below.</div>
+      <div class="help">Type six numbers, tap 🎲 LUCKY PICK for random numbers, use the NUMBER BOARD, or scan your ticket below.</div>
       <details class="quick" id="quickFill">
         <summary>📷 Scan or paste your ticket</summary>
         <div class="help">Tap the box, then choose <b>Scan Text</b> and point the camera at your ticket — or paste the numbers. One bet per line. Check the result before comparing.</div>
@@ -53,6 +53,7 @@
       </details>
       <div id="bets"></div>
       <div class="actions">
+        <button type="button" class="action lucky" id="luckyEmpty">🎲 LUCKY PICK EMPTY BETS</button>
         <button type="button" class="action danger" id="clearBets">Clear Bets</button>
       </div>
     </section>
@@ -92,7 +93,10 @@
     <div class="picker" role="dialog" aria-modal="true" aria-labelledby="pickerTitle">
       <div class="pickerTitle" id="pickerTitle"></div>
       <div class="help">Tap exactly six different numbers.</div>
-      <div class="counter" id="counter" aria-live="polite"></div>
+      <div class="pickTop">
+        <div class="counter" id="counter" aria-live="polite"></div>
+        <button type="button" class="action lucky" id="pickerLucky">🎲 Lucky Pick the rest</button>
+      </div>
       <div class="grid" id="grid"></div>
       <div class="pickActions">
         <button type="button" class="action danger" id="pickerClear">Clear</button>

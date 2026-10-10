@@ -4,7 +4,7 @@ Offline iPhone web app for checking PCSO 6-number lotto bets
 (6/42, 6/45, 6/49, 6/55, 6/58) against the official winning numbers.
 
 **Live:** https://nlacap.github.io/PCSO-Lotto-Checker/
-Current version is shown in the page footer (v2.3.0).
+Current version is shown in the page footer (v2.4.0).
 
 ▶ **[How-to video](https://nlacap.github.io/PCSO-Lotto-Checker/docs/how-to-use.mp4)** (80 s) — also linked
 from the app footer. It walks through every step below with the real app.
@@ -14,7 +14,10 @@ from the app footer. It walks through every step below with the real app.
 1. **Pick the game and draw date.**
 2. **Enter your bets** (up to 6) — any of:
    - type the numbers (the cursor jumps to the next box automatically),
-   - tap **SELECT ON NUMBER BOARD**,
+   - tap **🎲 LUCKY PICK** on a bet for six random numbers, or **🎲 LUCKY PICK EMPTY BETS** to fill
+     every empty bet at once (inside the number board, *Lucky Pick the rest* keeps the numbers you
+     tapped and picks the others),
+   - tap **NUMBER BOARD**,
    - open **📷 Scan or paste your ticket**, tap the box, choose **Scan Text**, point the camera
      at the ticket, then **FILL BETS**.
 3. **Get the winning numbers** — any of:
@@ -48,6 +51,13 @@ What happens:
 
 Always confirm a winning ticket with PCSO before claiming a prize.
 
+### About Lucky Pick
+
+Numbers come from the iPhone's cryptographically secure random generator (`crypto.getRandomValues`),
+not `Math.random()`, with rejection sampling so every number in the game has exactly the same chance.
+A test checks the spread over 300,000 draws. Random numbers are as likely to win as any others —
+no more, no less.
+
 ## Validation rules
 
 - Each box accepts digits only; letters, signs and decimals are stripped as you type.
@@ -74,6 +84,7 @@ js/config.js          games, number ranges, draw days, prize tiers, version, sto
 js/validation.js      pure validation + matching logic (no DOM)          — unit tested
 js/ticketParser.js    reads bets from scanned/pasted ticket text         — unit tested
 js/resultsParser.js   reads official results copied/scanned from PCSO    — unit tested
+js/luckyPick.js       secure, unbiased random numbers for Lucky Pick     — unit tested
 js/storage.js         bets + saved results: load/save, repair, migration — unit tested
 js/picker.js          number-board overlay
 js/status.js          status message box
@@ -97,7 +108,7 @@ Data on the phone (localStorage):
 ## Development
 
 ```
-npm test        # 35 unit tests, also run by GitHub Actions on every push
+npm test        # 40 unit tests, also run by GitHub Actions on every push
 ```
 
 To preview locally, serve the folder over HTTP (ES modules don't load from `file://`):
@@ -126,6 +137,7 @@ video shows the scanned text appearing in the box.
 
 ## Changelog
 
+- **2.4.0** — 🎲 Lucky Pick: per bet, for all empty bets, and to finish a pick on the number board.
 - **2.3.0** — Winning numbers and Compare wait until the draw has happened (9:00 PM Philippine time);
   bets can be entered any time.
 - **2.2.1** — How-to video for the user manual, linked from the app footer.
