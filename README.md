@@ -1,66 +1,113 @@
 # PCSO Lotto Checker
 
-Offline iPhone web app for checking PCSO 6-number lotto bets (6/42, 6/45, 6/49, 6/55, 6/58).
-Live at https://nlacap.github.io/PCSO-Lotto-Checker/
+Offline iPhone web app for checking PCSO 6-number lotto bets
+(6/42, 6/45, 6/49, 6/55, 6/58) against the official winning numbers.
 
-## Structure
+**Live:** https://nlacap.github.io/PCSO-Lotto-Checker/
+Current version is shown in the page footer (v2.2.0).
+
+## Using it on iPhone
+
+1. **Pick the game and draw date.**
+2. **Enter your bets** (up to 6) — any of:
+   - type the numbers (the cursor jumps to the next box automatically),
+   - tap **SELECT ON NUMBER BOARD**,
+   - open **📷 Scan or paste your ticket**, tap the box, choose **Scan Text**, point the camera
+     at the ticket, then **FILL BETS**.
+3. **Get the winning numbers** — any of:
+   - open **📋 Scan or paste PCSO results**, paste the results table, tap **SAVE RESULTS**
+     (see below),
+   - paste all six at once (e.g. `05-12-23-34-40-41`) into the first winning box,
+   - type them or use the board.
+4. Tap **COMPARE ALL BETS**. Each bet shows its matches and prize tier (3, 4, 5 or 6 numbers).
+
+Everything is saved automatically on the phone and works offline once loaded.
+Add it to the Home Screen from Safari's Share menu for an app-like icon.
+
+### Saving official PCSO results
+
+1. On pcso.gov.ph, open the lotto results search and find the draw.
+2. Either select and **Copy** the results table in Safari, **or** take a screenshot, open it in
+   Photos, press and hold on the text, select all, and **Copy**.
+   Include the **DRAW DATE** column if you can.
+3. In the checker, open **📋 Scan or paste PCSO results**, paste, tap **SAVE RESULTS**.
+
+What happens:
+
+- Every 6/42–6/58 row is read and checked; 2D/3D/4D/6D rows are skipped.
+- Results are stored **on this phone only** (newest 60 draws per game).
+- Picking a game + draw date fills the winning numbers from a saved result.
+- Numbers you typed are never overwritten — if they differ, a **USE SAVED PCSO RESULT** button appears.
+- The **Latest saved results** list under the paste box is tappable: it switches to that game and draw.
+- If the pasted text has no draw date (e.g. the date column was cut off), results are saved under
+  the app's Draw Date and a warning asks you to confirm it — PCSO's search-box date is not always
+  the draw date.
+
+Always confirm a winning ticket with PCSO before claiming a prize.
+
+## Validation rules
+
+- Each box accepts digits only; letters, signs and decimals are stripped as you type.
+- Out-of-range and duplicate numbers turn red immediately, with a message under the row.
+- Compare checks the draw date, the winning numbers and every bet, and lists **all** problems at once.
+  Valid bets are still checked when another bet has an error.
+- Warnings (not blocking): draw date in the future, date not on the game's usual draw day
+  (silenced when a saved official result exists for that date), two identical bets.
+- Scanned/pasted tickets and results are validated line by line; rejected lines are listed, never
+  silently kept.
+- Saved data is checked and repaired on load; damaged data is reset with a backup copy kept
+  (`pcso-lotto-checker-v1.backup`). Save failures (Private Browsing, storage full) are shown, not hidden.
+
+## Project structure
 
 ```
 index.html            page markup only
 css/styles.css        all styling
-js/config.js          games, number ranges, draw days, prize tiers, version
-js/validation.js      pure validation + matching logic (no DOM) — unit tested
-js/ticketParser.js    reads bets from scanned/pasted ticket text — unit tested
-js/resultsParser.js   reads official results copied/scanned from pcso.gov.ph — unit tested
-js/storage.js         load/save, schema repair, migration of old saved data
+js/config.js          games, number ranges, draw days, prize tiers, version, storage keys
+js/validation.js      pure validation + matching logic (no DOM)          — unit tested
+js/ticketParser.js    reads bets from scanned/pasted ticket text         — unit tested
+js/resultsParser.js   reads official results copied/scanned from PCSO    — unit tested
+js/storage.js         bets + saved results: load/save, repair, migration — unit tested
 js/picker.js          number-board overlay
 js/status.js          status message box
 js/dom.js             small DOM helpers
 js/app.js             controller: builds the page, wires events, runs Compare
-sw.js                 offline cache (bump CACHE when files are added/removed)
+sw.js                 offline cache
 icons/                favicon, home-screen and PWA icons
 tests/                node:test unit tests
 ```
 
-## Validation rules
+Data on the phone (localStorage):
 
-- Each cell accepts digits only (max 2); letters, signs and decimals are stripped as you type.
-- Out-of-range and duplicate numbers are flagged red immediately, with a message under the row.
-- Compare checks the draw date, the winning numbers and every bet, and lists **all** problems at once.
-  Valid bets are still checked when another bet has an error.
-- Warnings (not blocking): draw date in the future, date not on the game's usual draw day, two identical bets.
-- Saved data is checked and repaired on load; damaged data is reset with a backup copy kept
-  (`pcso-lotto-checker-v1.backup`). Save failures (Private Browsing, storage full) are shown, not hidden.
+| Key | Contents |
+|---|---|
+| `pcso-lotto-checker-v1` | bets, winning numbers and draw date per game |
+| `pcso-lotto-checker-v1.backup` | copy of damaged data, if it ever had to be reset |
+| `pcso-lotto-results-v1` | saved official PCSO results |
 
-## Scan or paste
-
-- **Whole ticket:** open "Scan or paste your ticket", tap the box, choose *Scan Text* (iPhone Live Text) and point at the ticket, then FILL BETS.
-  Each line with six numbers (or a line starting A–F) becomes a bet; the game is read from the ticket when printed (6/49, SUPER, …).
-  Lines that fail validation are listed, never silently kept.
-- **One row:** paste or scan `05-12-23-34-40-41` (any separators) into the first box of a row and it spreads across all six.
-
-## Saved PCSO results
-
-Open "Scan or paste PCSO results" in the winning-numbers card and paste the results table
-copied from pcso.gov.ph (or text copied from a screenshot with Live Text), then SAVE RESULTS.
-
-- Reads every 6/42–6/58 row (2D/3D/4D/6D are skipped), validates it, and saves it on this device
-  (`pcso-lotto-results-v1`, newest 60 draws per game).
-- Works whether the text comes row by row (Safari copy) or column by column (Live Text).
-  If the date column is cut off, the Draw Date set in the app is used.
-- Picking a game and draw date fills the winning numbers from a saved result. Numbers you typed
-  are never overwritten — if they differ, a USE SAVED PCSO RESULT button appears.
-- A saved official result for a date also silences the "not a usual draw day" warning.
-- When the pasted text has no draw date, results are saved under the app's Draw Date and a warning says so.
-
-## Tests
+## Development
 
 ```
-npm test
+npm test        # 33 unit tests, also run by GitHub Actions on every push
 ```
 
-Runs automatically on every push (GitHub Actions).
+To preview locally, serve the folder over HTTP (ES modules don't load from `file://`):
 
-## Releasing
+```
+python3 -m http.server 8000   # then open http://localhost:8000
+```
 
-Bump `APP_VERSION` in `js/config.js` (shown in the page footer) and `CACHE` in `sw.js`.
+### Releasing
+
+1. Bump `APP_VERSION` in `js/config.js` (shown in the footer).
+2. Bump `CACHE` in `sw.js`, and add any new file to its `ASSETS` list.
+3. Push to `main`; GitHub Pages updates within a minute or two. On the phone, reload once.
+
+## Changelog
+
+- **2.2.0** — Scan or paste official PCSO results; saved on the phone and auto-filled by game and
+  draw date; warning when a draw date had to be assumed.
+- **2.1.0** — Scan or paste your ticket (iPhone Live Text); paste six numbers into any row.
+- **2.0.0** — Split into modules; live per-box validation; Compare lists every problem; prize tiers;
+  safer storage and offline cache; unit tests and GitHub Actions.
+- **1.x** — Original single-file checker; logo fixes.
