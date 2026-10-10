@@ -4,7 +4,7 @@ Offline iPhone web app for checking PCSO 6-number lotto bets
 (6/42, 6/45, 6/49, 6/55, 6/58) against the official winning numbers.
 
 **Live:** https://nlacap.github.io/PCSO-Lotto-Checker/
-Current version is shown in the page footer (v2.2.1).
+Current version is shown in the page footer (v2.3.0).
 
 ▶ **[How-to video](https://nlacap.github.io/PCSO-Lotto-Checker/docs/how-to-use.mp4)** (80 s) — also linked
 from the app footer. It walks through every step below with the real app.
@@ -22,7 +22,7 @@ from the app footer. It walks through every step below with the real app.
      (see below),
    - paste all six at once (e.g. `05-12-23-34-40-41`) into the first winning box,
    - type them or use the board.
-4. Tap **COMPARE ALL BETS**. Each bet shows its matches and prize tier (3, 4, 5 or 6 numbers).
+4. After the 9:00 PM draw, tap **COMPARE ALL BETS**. Each bet shows its matches and prize tier (3, 4, 5 or 6 numbers).
 
 Everything is saved automatically on the phone and works offline once loaded.
 Add it to the Home Screen from Safari's Share menu for an app-like icon.
@@ -54,8 +54,12 @@ Always confirm a winning ticket with PCSO before claiming a prize.
 - Out-of-range and duplicate numbers turn red immediately, with a message under the row.
 - Compare checks the draw date, the winning numbers and every bet, and lists **all** problems at once.
   Valid bets are still checked when another bet has an error.
-- Warnings (not blocking): draw date in the future, date not on the game's usual draw day
-  (silenced when a saved official result exists for that date), two identical bets.
+- **Draw not held yet:** PCSO draws at 9:00 PM Philippine time. For today's draw before 9:00 PM,
+  or any later date, bets can still be entered and are saved, but the winning numbers are locked,
+  Compare explains that the draw hasn't happened, and pasted PCSO results for that date are rejected.
+  The lock lifts by itself at 9:00 PM. Philippine time is used even if the phone is set to another zone.
+- Warnings (not blocking): date not on the game's usual draw day (silenced when a saved official
+  result exists for that date), two identical bets.
 - Scanned/pasted tickets and results are validated line by line; rejected lines are listed, never
   silently kept.
 - Saved data is checked and repaired on load; damaged data is reset with a backup copy kept
@@ -93,7 +97,7 @@ Data on the phone (localStorage):
 ## Development
 
 ```
-npm test        # 33 unit tests, also run by GitHub Actions on every push
+npm test        # 35 unit tests, also run by GitHub Actions on every push
 ```
 
 To preview locally, serve the folder over HTTP (ES modules don't load from `file://`):
@@ -122,6 +126,8 @@ video shows the scanned text appearing in the box.
 
 ## Changelog
 
+- **2.3.0** — Winning numbers and Compare wait until the draw has happened (9:00 PM Philippine time);
+  bets can be entered any time.
 - **2.2.1** — How-to video for the user manual, linked from the app footer.
 - **2.2.0** — Scan or paste official PCSO results; saved on the phone and auto-filled by game and
   draw date; warning when a draw date had to be assumed.

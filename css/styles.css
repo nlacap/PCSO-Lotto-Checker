@@ -400,3 +400,22 @@ input[type=date] {
   color: #6dd4ff;
   text-decoration: none;
 }
+
+/* ---- draw not held yet ---- */
+.drawWait {
+  margin-top: 10px;
+  border: 1px solid #e7ad1688;
+  background: #2a2208;
+  color: #ffe6a3;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.drawWait[hidden] {
+  display: none;
+}
+.six input:disabled,
+.action:disabled {
+  opacity: .45;
+}

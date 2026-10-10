@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   sanitizeInput, parseCell, validateSet, liveCheck, parseIsoDate,
   validateDrawDate, matchNumbers, prizeTier, findDuplicateBets,
+  manilaNow, drawStatus, resultsAvailable,
 } from '../js/validation.js';
 import { GAMES } from '../js/config.js';
 
@@ -59,18 +60,42 @@ test('parseIsoDate rejects impossible dates', () => {
   assert.equal(parseIsoDate('10/08/2026'), null);
 });
 
+// 13:00 and 21:30 Philippine time on Fri 9 Oct 2026 (UTC+8)
+const afternoon = new Date('2026-10-09T05:00:00Z');
+const night = new Date('2026-10-09T13:30:00Z');
+
+test('manilaNow uses Philippine time regardless of the phone zone', () => {
+  assert.deepEqual(manilaNow(afternoon), { date: '2026-10-09', minutes: 13 * 60 });
+  assert.deepEqual(manilaNow(new Date('2026-10-09T16:30:00Z')), { date: '2026-10-10', minutes: 30 });
+});
+
+test('drawStatus and resultsAvailable', () => {
+  assert.equal(drawStatus('2026-10-08', afternoon), 'past');
+  assert.equal(drawStatus('2026-10-09', afternoon), 'tonight');
+  assert.equal(drawStatus('2026-10-09', night), 'drawn');
+  assert.equal(drawStatus('2026-10-10', night), 'future');
+  assert.equal(resultsAvailable('2026-10-09', afternoon), false);
+  assert.equal(resultsAvailable('2026-10-09', new Date('2026-10-09T13:00:00Z')), true); // exactly 9:00 PM
+  assert.equal(resultsAvailable('2026-10-08', afternoon), true);
+  assert.equal(resultsAvailable('2026-10-12', night), false);
+});
+
 test('validateDrawDate', () => {
-  const today = new Date(2026, 9, 9); // Fri 9 Oct 2026
-  assert.equal(validateDrawDate('', g642, today).ok, false);
-  assert.equal(validateDrawDate('2026-13-01', g642, today).ok, false);
+  assert.equal(validateDrawDate('', g642, afternoon).ok, false);
+  assert.equal(validateDrawDate('2026-13-01', g642, afternoon).ok, false);
   // Thu 8 Oct is a 6/42 draw day
-  assert.deepEqual(validateDrawDate('2026-10-08', g642, today).warnings, []);
+  const thu = validateDrawDate('2026-10-08', g642, afternoon);
+  assert.deepEqual(thu.warnings, []);
+  assert.equal(thu.resultsReady, true);
   // Wed 7 Oct is not
-  assert.equal(validateDrawDate('2026-10-07', g642, today).warnings.length, 1);
-  // Future date warns but is still allowed
-  const f = validateDrawDate('2026-10-10', g642, today);
-  assert.equal(f.ok, true);
-  assert.ok(f.warnings[0].includes('future'));
+  assert.equal(validateDrawDate('2026-10-07', g642, afternoon).warnings.length, 1);
+  // today before 9 PM / future: valid for bets, but no results yet
+  const tonight = validateDrawDate('2026-10-09', GAMES[1], afternoon);
+  assert.equal(tonight.ok, true);
+  assert.equal(tonight.resultsReady, false);
+  assert.match(tonight.waiting, /9:00 PM/);
+  assert.equal(validateDrawDate('2026-10-09', GAMES[1], night).resultsReady, true);
+  assert.equal(validateDrawDate('2026-10-13', g642, night).resultsReady, false);
 });
 
 test('matching and prizes', () => {

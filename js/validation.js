@@ -1,7 +1,7 @@
 // Pure validation and matching logic — no DOM, no storage.
 // Everything here is covered by tests/validation.test.js.
 
-import { PICK_COUNT, DAY_NAMES, PRIZE_TIERS } from './config.js';
+import { PICK_COUNT, DAY_NAMES, PRIZE_TIERS, DRAW_TIMEZONE, DRAW_HOUR, DRAW_TIME_LABEL } from './config.js';
 
 /** Strip anything that is not a digit and cap at two characters (used while typing). */
 export function sanitizeInput(raw) {
@@ -91,22 +91,68 @@ export function parseIsoDate(iso) {
 }
 
 /**
- * Validate the draw date for a game.
- * Errors block the comparison; warnings are only shown.
+ * Current date and minutes-past-midnight in Philippine time, whatever the
+ * phone's own time zone is.
+ * @returns {{date:string, minutes:number}}
  */
-export function validateDrawDate(iso, game, today = new Date()) {
-  if (!iso) return { ok: false, error: 'Enter the draw date.', warnings: [] };
+export function manilaNow(now = new Date()) {
+  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', {
+    timeZone: DRAW_TIMEZONE, year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+  }).formatToParts(now).map(p => [p.type, p.value]));
+  return { date: `${parts.year}-${parts.month}-${parts.day}`, minutes: Number(parts.hour) * 60 + Number(parts.minute) };
+}
+
+/**
+ * Has the draw on `iso` already happened?
+ * @returns {'past'|'tonight'|'drawn'|'future'}
+ *   past    – an earlier day
+ *   drawn   – today, after the draw time
+ *   tonight – today, before the draw time
+ *   future  – a later day
+ */
+export function drawStatus(iso, now = new Date()) {
+  const { date, minutes } = manilaNow(now);
+  if (iso < date) return 'past';
+  if (iso > date) return 'future';
+  return minutes >= DRAW_HOUR * 60 ? 'drawn' : 'tonight';
+}
+
+/** True when winning numbers for this draw date can exist. */
+export const resultsAvailable = (iso, now = new Date()) => {
+  const s = drawStatus(iso, now);
+  return s === 'past' || s === 'drawn';
+};
+
+/** Friendly "not drawn yet" message, or null when results can exist. */
+export function notDrawnMessage(iso, now = new Date()) {
+  const s = drawStatus(iso, now);
+  if (s === 'tonight') return `Tonight's draw is at ${DRAW_TIME_LABEL}. Winning numbers can be entered after the draw.`;
+  if (s === 'future') {
+    const day = parseIsoDate(iso)?.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) ?? iso;
+    return `This draw hasn't happened yet (${day}, ${DRAW_TIME_LABEL}). Winning numbers can be entered after the draw.`;
+  }
+  return null;
+}
+
+/**
+ * Validate the draw date for a game.
+ * `ok:false` = not a usable date. `resultsReady:false` = a valid date whose draw
+ * has not happened yet: bets may be entered, but there is nothing to compare with.
+ * Warnings are only shown, never block.
+ */
+export function validateDrawDate(iso, game, now = new Date()) {
+  if (!iso) return { ok: false, error: 'Enter the draw date.', warnings: [], resultsReady: false };
   const date = parseIsoDate(iso);
-  if (!date) return { ok: false, error: 'The draw date is not a valid date.', warnings: [] };
+  if (!date) return { ok: false, error: 'The draw date is not a valid date.', warnings: [], resultsReady: false };
 
   const warnings = [];
-  const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  if (date > todayMidnight) warnings.push('The draw date is in the future — results may not be official yet.');
   if (game?.drawDays && !game.drawDays.includes(date.getDay())) {
     const days = game.drawDays.map(d => DAY_NAMES[d]).join(', ');
     warnings.push(`${game.name} is normally drawn on ${days}, but ${iso} is a ${DAY_NAMES[date.getDay()]}. Please double-check the date.`);
   }
-  return { ok: true, error: null, warnings };
+  const waiting = notDrawnMessage(iso, now);
+  return { ok: true, error: null, warnings, resultsReady: !waiting, waiting };
 }
 
 /** Numbers in `bet` that also appear in `winning`. */

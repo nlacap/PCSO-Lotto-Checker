@@ -2,7 +2,7 @@
 
 import { APP_VERSION, GAMES, BET_SLOTS, PICK_COUNT, STORAGE_KEY } from './config.js';
 import {
-  sanitizeInput, validateSet, liveCheck, validateDrawDate,
+  sanitizeInput, validateSet, liveCheck, validateDrawDate, notDrawnMessage, resultsAvailable,
   matchNumbers, prizeTier, findDuplicateBets,
 } from './validation.js';
 import { loadState, saveState, blankBets, blankRow, loadResults, saveResults, mergeResults, findResult, latestResult } from './storage.js';
@@ -86,6 +86,39 @@ function render() {
   clearResults();
   ['w', ...Array.from({ length: BET_SLOTS }, (_, i) => i)].forEach(liveValidate);
   showDateHint();
+  applyDrawLock();
+}
+
+// ---------------------------------------------------------------- draw not held yet
+
+/** Message when the selected draw hasn't happened yet (today before 9 PM or a later day), else null. */
+const waitingForDraw = () => (draw().date ? notDrawnMessage(draw().date) : null);
+let drawLocked = false;
+
+/**
+ * Bets can always be entered. Winning numbers stay locked until the draw has
+ * taken place, because there are no official results before that.
+ */
+function applyDrawLock() {
+  const msg = waitingForDraw();
+  const wasLocked = drawLocked;
+  drawLocked = !!msg;
+  rowInputs('w').forEach(x => { x.disabled = drawLocked; });
+  $('#pickWin').disabled = drawLocked;
+  const box = $('#drawWait');
+  box.hidden = !drawLocked;
+  box.textContent = drawLocked ? `⏳ ${msg} Your bets are saved — come back after the draw.` : '';
+  return { wasLocked, locked: drawLocked };
+}
+
+/** Re-check every so often so the lock lifts by itself at draw time. */
+function refreshDrawLock() {
+  const { wasLocked, locked } = applyDrawLock();
+  if (wasLocked && !locked) {
+    const auto = autoFillWinning();
+    setStatus('success', 'The draw has taken place — you can now enter the winning numbers.' +
+      (auto === 'filled' ? ' They were filled from your saved PCSO results.' : ''));
+  }
 }
 
 function liveValidate(key) {
@@ -180,6 +213,7 @@ function wire() {
     persist();
     clearResults();
     showDateHint();
+    applyDrawLock();
     if (autoFillWinning() === 'filled') setStatus('info', 'Winning numbers filled from saved PCSO results.');
   });
 
@@ -322,6 +356,7 @@ const fmtDate = iso => {
 function autoFillWinning() {
   const btn = $('#useSaved');
   btn.hidden = true;
+  if (waitingForDraw()) return 'none';
   const saved = findResult(results, state.game, draw().date);
   if (!saved) return 'none';
 
@@ -363,6 +398,12 @@ function importResults() {
   if (!text.trim()) { hint.textContent = 'Paste or scan the PCSO results first.'; return; }
 
   const parsed = parseResults(text, { fallbackDate: draw().date || null });
+  // results can't exist for a draw that hasn't happened — almost always a wrong date
+  parsed.results = parsed.results.filter(r => {
+    if (resultsAvailable(r.date)) return true;
+    parsed.rejected.push(`${GAMES[r.gameIndex].name} ${r.date}: that draw hasn't happened yet — check the draw date.`);
+    return false;
+  });
   if (!parsed.results.length) {
     hint.textContent = 'No 6-number lotto results found.' + (parsed.rejected.length ? ' ' + parsed.rejected.join(' ') : ' Copy the rows that show the game, combination and draw date.');
     return;
@@ -417,12 +458,6 @@ function compare() {
   if (!date.ok) problems.push(date.error);
   else warnings.push(...date.warnings);
 
-  const win = validateSet(d.wins, g.max);
-  if (win.status !== 'ok') {
-    problems.push('Winning numbers: ' + win.errors.join(' '));
-    markBad('w', win.badIndexes);
-  }
-
   const bets = d.bets.map(b => validateSet(b, g.max, { allowEmpty: true }));
   const badBets = [];
   bets.forEach((r, i) => {
@@ -433,6 +468,21 @@ function compare() {
     res.textContent = 'Not checked — fix this bet first.';
     res.className = 'result error';
   });
+
+  // Draw not held yet: bets are fine to keep, but there is nothing to compare with.
+  if (date.ok && !date.resultsReady) {
+    const okBets = bets.filter(r => r.status === 'ok').length;
+    setStatus(badBets.length ? 'warn' : 'info',
+      `⏳ ${date.waiting} ${okBets ? `Your ${okBets} bet${okBets > 1 ? 's are' : ' is'} saved.` : ''}`.trim(),
+      badBets);
+    return;
+  }
+
+  const win = validateSet(d.wins, g.max);
+  if (win.status !== 'ok') {
+    problems.push('Winning numbers: ' + win.errors.join(' '));
+    markBad('w', win.badIndexes);
+  }
 
   const validBets = bets.map(r => (r.status === 'ok' ? r.numbers : null));
   const validCount = validBets.filter(Boolean).length;
@@ -508,5 +558,8 @@ if (initial.warning) {
   $('#saveState').textContent = '⚠ ' + initial.warning;
   $('#saveState').classList.add('warn');
 }
+
+setInterval(refreshDrawLock, 30 * 1000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshDrawLock(); });
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});

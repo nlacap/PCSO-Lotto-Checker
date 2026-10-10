@@ -7,7 +7,7 @@
 //
 // Bump CACHE when the list of files changes.
 
-const CACHE = 'pcso-lotto-v15';
+const CACHE = 'pcso-lotto-v16';
 const ASSETS = [
   './',
   './index.html',

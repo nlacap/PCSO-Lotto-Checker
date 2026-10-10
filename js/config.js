@@ -1,6 +1,6 @@
 // Static configuration. Nothing in here touches the DOM or storage.
 
-export const APP_VERSION = '2.2.1';
+export const APP_VERSION = '2.3.0';
 
 export const STORAGE_KEY = 'pcso-lotto-checker-v1'; // kept so existing saved bets still load
 export const BACKUP_KEY = STORAGE_KEY + '.backup';
@@ -21,6 +21,12 @@ export const GAMES = Object.freeze([
 ]);
 
 export const MAX_NUMBER = Math.max(...GAMES.map(g => g.max));
+
+// PCSO draws are held at 9:00 PM Philippine time. Winning numbers for a draw
+// can only be entered/compared once that time has passed.
+export const DRAW_TIMEZONE = 'Asia/Manila';
+export const DRAW_HOUR = 21;
+export const DRAW_TIME_LABEL = '9:00 PM';
 
 export const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
