@@ -396,3 +396,7 @@ input[type=date] {
   font: 700 13px ui-monospace, Menlo, monospace;
   margin-left: auto;
 }
+.footer a {
+  color: #6dd4ff;
+  text-decoration: none;
+}

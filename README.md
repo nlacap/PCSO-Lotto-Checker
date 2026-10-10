@@ -4,7 +4,10 @@ Offline iPhone web app for checking PCSO 6-number lotto bets
 (6/42, 6/45, 6/49, 6/55, 6/58) against the official winning numbers.
 
 **Live:** https://nlacap.github.io/PCSO-Lotto-Checker/
-Current version is shown in the page footer (v2.2.0).
+Current version is shown in the page footer (v2.2.1).
+
+▶ **[How-to video](https://nlacap.github.io/PCSO-Lotto-Checker/docs/how-to-use.mp4)** (80 s) — also linked
+from the app footer. It walks through every step below with the real app.
 
 ## Using it on iPhone
 
@@ -74,6 +77,8 @@ js/dom.js             small DOM helpers
 js/app.js             controller: builds the page, wires events, runs Compare
 sw.js                 offline cache
 icons/                favicon, home-screen and PWA icons
+docs/how-to-use.mp4   user-manual video (generated)
+docs/make-video.py    records the video from the real app
 tests/                node:test unit tests
 ```
 
@@ -97,6 +102,18 @@ To preview locally, serve the folder over HTTP (ES modules don't load from `file
 python3 -m http.server 8000   # then open http://localhost:8000
 ```
 
+### Updating the how-to video
+
+After UI changes, regenerate it so it matches the app (needs Playwright + Chromium and ffmpeg):
+
+```
+python3 docs/make-video.py
+```
+
+The script drives the real app at iPhone size with demo data, adds captions and tap markers,
+and writes `docs/how-to-use.mp4`. The iPhone *Scan Text* camera step can't be recorded, so the
+video shows the scanned text appearing in the box.
+
 ### Releasing
 
 1. Bump `APP_VERSION` in `js/config.js` (shown in the footer).
@@ -105,6 +122,7 @@ python3 -m http.server 8000   # then open http://localhost:8000
 
 ## Changelog
 
+- **2.2.1** — How-to video for the user manual, linked from the app footer.
 - **2.2.0** — Scan or paste official PCSO results; saved on the phone and auto-filled by game and
   draw date; warning when a draw date had to be assumed.
 - **2.1.0** — Scan or paste your ticket (iPhone Live Text); paste six numbers into any row.
