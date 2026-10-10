@@ -42,7 +42,8 @@ const datesIn = s => [...String(s).matchAll(DATE)].map(m => toIsoDate(m[1], m[2]
  * @param {string} text
  * @param {{fallbackDate?:string}} [opts] used when the text has no draw dates
  *   (e.g. a screenshot that cuts off the DRAW DATE column)
- * @returns {{results: {gameIndex:number, date:string, numbers:number[]}[], rejected:string[]}}
+ * @returns {{results: {gameIndex:number, date:string, numbers:number[], dateGuessed:boolean}[], rejected:string[]}}
+ *   dateGuessed is true when the date came from fallbackDate, not from the text.
  *   numbers are sorted ascending. Duplicate rows are collapsed.
  */
 export function parseResults(text, { fallbackDate = null } = {}) {
@@ -56,7 +57,7 @@ export function parseResults(text, { fallbackDate = null } = {}) {
     const dates = datesIn(line);
     if (GAME_LINE.test(line) && combos.length && (dates.length || fallbackDate)) {
       rowMode++;
-      rows.push({ label: line, combo: combos[0], date: dates[0] ?? fallbackDate });
+      rows.push({ label: line, combo: combos[0], date: dates[0] ?? fallbackDate, guessed: !dates.length });
     }
   });
 
@@ -66,13 +67,13 @@ export function parseResults(text, { fallbackDate = null } = {}) {
     const combos = lines.flatMap(combosIn);
     const dates = lines.flatMap(datesIn);
     const n = Math.min(labels.length, combos.length);
-    for (let i = 0; i < n; i++) rows.push({ label: labels[i], combo: combos[i], date: dates[i] ?? fallbackDate });
+    for (let i = 0; i < n; i++) rows.push({ label: labels[i], combo: combos[i], date: dates[i] ?? fallbackDate, guessed: dates[i] == null });
   }
 
   const results = [];
   const rejected = [];
   const seen = new Set();
-  rows.forEach(({ label, combo, date }) => {
+  rows.forEach(({ label, combo, date, guessed }) => {
     const gameIndex = gameFromLabel(label);
     if (gameIndex == null) return; // 2D/3D/4D/6D — not supported, skip quietly
     const name = GAMES[gameIndex].name;
@@ -82,7 +83,7 @@ export function parseResults(text, { fallbackDate = null } = {}) {
     const key = gameIndex + '|' + date;
     if (seen.has(key)) return;
     seen.add(key);
-    results.push({ gameIndex, date, numbers: v.numbers });
+    results.push({ gameIndex, date, numbers: v.numbers, dateGuessed: !!guessed });
   });
   return { results, rejected };
 }

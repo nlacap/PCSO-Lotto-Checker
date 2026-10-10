@@ -28,8 +28,8 @@ Megalotto 6/45	30-24-32-26-35-25	10/7/2026	8,910,000.00	0
   const r = parseResults(t);
   assert.deepEqual(r.rejected, []);
   assert.deepEqual(r.results, [
-    { gameIndex: 4, date: '2026-10-07', numbers: [2, 14, 29, 30, 33, 38] },
-    { gameIndex: 1, date: '2026-10-07', numbers: [24, 25, 26, 30, 32, 35] },
+    { gameIndex: 4, date: '2026-10-07', numbers: [2, 14, 29, 30, 33, 38], dateGuessed: false },
+    { gameIndex: 1, date: '2026-10-07', numbers: [24, 25, 26, 30, 32, 35], dateGuessed: false },
   ]);
 });
 
@@ -87,5 +87,15 @@ Megalotto 6/45
   assert.equal(none.results.length, 0);
   assert.equal(none.rejected.length, 2);
   const r = parseResults(t, { fallbackDate: '2026-10-07' });
-  assert.deepEqual(r.results.map(x => [x.gameIndex, x.date]), [[4, '2026-10-07'], [1, '2026-10-07']]);
+  assert.deepEqual(r.results.map(x => [x.gameIndex, x.date, x.dateGuessed]), [[4, '2026-10-07', true], [1, '2026-10-07', true]]);
+});
+
+test('real screenshot (10/9/2026), Live Text column order', () => {
+  const t = ['LOTTO GAME', 'Ultra Lotto 6/58', 'Megalotto 6/45', '4D Lotto', '3D Lotto 2PM', '3D Lotto 5PM',
+    'COMBINATIONS', '29-38-33-14-02-30', '30-24-32-26-35-25', '7-1-7-9', '8-2-1', '7-8-3',
+    'DRAW DATE', '10/9/2026', '10/9/2026', '10/9/2026', '10/9/2026', '10/9/2026',
+    'JACKPOT (PHP)', '377,056,593.95', '101,025,083.06', '68,566.00', '4,500.00', '4,500.00',
+    'WINNERS', '0', '0', '13', '314', '44'].join('\n');
+  const r = parseResults(t, { fallbackDate: '2026-10-07' });
+  assert.deepEqual(r.results.map(x => [x.gameIndex, x.date, x.dateGuessed]), [[4, '2026-10-09', false], [1, '2026-10-09', false]]);
 });

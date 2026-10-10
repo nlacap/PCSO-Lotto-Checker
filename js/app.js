@@ -382,6 +382,8 @@ function importResults() {
 
   const list = parsed.results.map(r => `${GAMES[r.gameIndex].id} ${fmtDate(r.date)}: ${fmtNums(r.numbers)}`);
   const notes = [...parsed.rejected];
+  const guessed = parsed.results.filter(r => r.dateGuessed);
+  if (guessed.length) notes.push(`The draw date was not in the pasted text, so ${guessed.length === parsed.results.length ? 'these were' : guessed.length + ' result(s) were'} saved under ${fmtDate(guessed[0].date)} from the Draw Date field. Make sure that is the actual draw date — the date in PCSO's search box is not always the draw date.`);
   if (merged.changed) notes.push(`${merged.changed} saved result${merged.changed > 1 ? 's were' : ' was'} replaced with the new numbers.`);
   if (!saved.ok) notes.push(saved.error);
   hint.className = notes.length ? 'hint warn' : 'hint';

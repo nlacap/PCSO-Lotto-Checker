@@ -51,6 +51,7 @@ copied from pcso.gov.ph (or text copied from a screenshot with Live Text), then 
 - Picking a game and draw date fills the winning numbers from a saved result. Numbers you typed
   are never overwritten — if they differ, a USE SAVED PCSO RESULT button appears.
 - A saved official result for a date also silences the "not a usual draw day" warning.
+- When the pasted text has no draw date, results are saved under the app's Draw Date and a warning says so.
 
 ## Tests
 
