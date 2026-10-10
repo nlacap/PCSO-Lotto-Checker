@@ -1,12 +1,12 @@
-# PCSO Lotto Checker
+# DigitalRose Lotto Checker
 
-Offline iPhone web app for checking PCSO 6-number lotto bets
+Offline iPhone web app for checking Philippine 6-number lotto bets
 (6/42, 6/45, 6/49, 6/55, 6/58) against the official winning numbers.
 
-**Live:** https://nlacap.github.io/PCSO-Lotto-Checker/
-Current version is shown in the page footer (v2.4.0).
+**Live:** https://nlacap.github.io/DigitalRose-Lotto-Checker/
+Current version is shown in the page footer (v2.5.0).
 
-▶ **[How-to video](https://nlacap.github.io/PCSO-Lotto-Checker/docs/how-to-use.mp4)** (80 s) — also linked
+▶ **[How-to video](https://nlacap.github.io/DigitalRose-Lotto-Checker/docs/how-to-use.mp4)** (80 s) — also linked
 from the app footer. It walks through every step below with the real app.
 
 ## Using it on iPhone
@@ -21,7 +21,7 @@ from the app footer. It walks through every step below with the real app.
    - open **📷 Scan or paste your ticket**, tap the box, choose **Scan Text**, point the camera
      at the ticket, then **FILL BETS**.
 3. **Get the winning numbers** — any of:
-   - open **📋 Scan or paste PCSO results**, paste the results table, tap **SAVE RESULTS**
+   - open **📋 Scan or paste official results**, paste the results table, tap **SAVE RESULTS**
      (see below),
    - paste all six at once (e.g. `05-12-23-34-40-41`) into the first winning box,
    - type them or use the board.
@@ -30,20 +30,20 @@ from the app footer. It walks through every step below with the real app.
 Everything is saved automatically on the phone and works offline once loaded.
 Add it to the Home Screen from Safari's Share menu for an app-like icon.
 
-### Saving official PCSO results
+### Saving official results
 
 1. On pcso.gov.ph, open the lotto results search and find the draw.
 2. Either select and **Copy** the results table in Safari, **or** take a screenshot, open it in
    Photos, press and hold on the text, select all, and **Copy**.
    Include the **DRAW DATE** column if you can.
-3. In the checker, open **📋 Scan or paste PCSO results**, paste, tap **SAVE RESULTS**.
+3. In the checker, open **📋 Scan or paste official results**, paste, tap **SAVE RESULTS**.
 
 What happens:
 
 - Every 6/42–6/58 row is read and checked; 2D/3D/4D/6D rows are skipped.
 - Results are stored **on this phone only** (newest 60 draws per game).
 - Picking a game + draw date fills the winning numbers from a saved result.
-- Numbers you typed are never overwritten — if they differ, a **USE SAVED PCSO RESULT** button appears.
+- Numbers you typed are never overwritten — if they differ, a **USE SAVED OFFICIAL RESULT** button appears.
 - The **Latest saved results** list under the paste box is tappable: it switches to that game and draw.
 - If the pasted text has no draw date (e.g. the date column was cut off), results are saved under
   the app's Draw Date and a warning asks you to confirm it — PCSO's search-box date is not always
@@ -137,6 +137,8 @@ video shows the scanned text appearing in the box.
 
 ## Changelog
 
+- **2.5.0** — Renamed to DigitalRose Lotto Checker (repo, header, title, app name); “PCSO results”
+  wording changed to “official results”; not-affiliated notice in the footer.
 - **2.4.0** — 🎲 Lucky Pick: per bet, for all empty bets, and to finish a pick on the number board.
 - **2.3.0** — Winning numbers and Compare wait until the draw has happened (9:00 PM Philippine time);
   bets can be entered any time.
@@ -147,3 +149,9 @@ video shows the scanned text appearing in the box.
 - **2.0.0** — Split into modules; live per-box validation; Compare lists every problem; prize tiers;
   safer storage and offline cache; unit tests and GitHub Actions.
 - **1.x** — Original single-file checker; logo fixes.
+
+## Disclaimer
+
+DigitalRose Lotto Checker is an independent personal project. It is not affiliated with,
+endorsed by or connected to the Philippine Charity Sweepstakes Office (PCSO). Game names are used
+only to identify the draws being checked. Always confirm winning tickets with PCSO.

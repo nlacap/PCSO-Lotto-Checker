@@ -40,8 +40,15 @@ body {
   box-shadow:0 0 14px #39cfff66;
 }
 .brand h1 {
-  font-size:25px;
+  font-size:23px;
+  line-height:1.15;
   margin:0;
+}
+.brand h1 .brandName {
+  display:block;
+  font-size:14px;
+  letter-spacing:.02em;
+  color:#ff6b8b;
 }
 .intro,.help {
   color:var(--muted);

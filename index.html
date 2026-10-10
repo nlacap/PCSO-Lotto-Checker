@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Lotto Checker">
-  <title>PCSO Lotto Checker</title>
+  <title>DigitalRose Lotto Checker</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/favicon.png" type="image/png">
   <link rel="apple-touch-icon" href="icons/logo-180.png">
@@ -18,7 +18,7 @@
   <main class="app">
     <header class="brand">
       <img src="icons/logo-180.png" alt="DigitalRose logo" width="58" height="58">
-      <h1>PCSO Lotto Checker</h1>
+      <h1><span class="brandName">DigitalRose</span>Lotto Checker</h1>
     </header>
     <p class="intro">Offline iPhone lotto checker. Your current draw, bets and winning numbers are saved automatically on this device.</p>
     <div class="saved" id="saveState">Ready • Auto-save enabled</div>
@@ -63,7 +63,7 @@
       <div class="help">Type the six official winning numbers or select them on the board. You can also paste all six at once (e.g. 05-12-23-34-40-41) into the first box.</div>
       <div class="drawWait" id="drawWait" role="status" hidden></div>
       <details class="quick" id="resultsFill">
-        <summary>📋 Scan or paste PCSO results</summary>
+        <summary>📋 Scan or paste official results</summary>
         <div class="help">On pcso.gov.ph, search the draw date, then select and <b>Copy</b> the results table and paste it here. Or take a screenshot, open it in Photos, press and hold the text to select it, Copy, and paste here. Results are saved on this device and fill the winning numbers when you pick a game and draw date.</div>
         <textarea id="resultsText" rows="5" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Ultra Lotto 6/58  29-38-33-14-02-30  10/7/2026&#10;Megalotto 6/45  30-24-32-26-35-25  10/7/2026"></textarea>
         <div class="hint" id="resultsHint" aria-live="polite"></div>
@@ -75,7 +75,7 @@
       </details>
       <div class="six" id="wins"></div>
       <div class="hint" id="winHint" aria-live="polite"></div>
-      <button type="button" class="action useSaved" id="useSaved" hidden>USE SAVED PCSO RESULT</button>
+      <button type="button" class="action useSaved" id="useSaved" hidden>USE SAVED OFFICIAL RESULT</button>
       <button type="button" class="action winBtn" id="pickWin">🏆 SELECT WINNING NUMBERS ON BOARD</button>
       <button type="button" class="action compare" id="compare">✓ COMPARE ALL BETS</button>
       <div class="actions">
@@ -85,7 +85,7 @@
       <div class="status info" id="status" role="status" aria-live="polite">Enter a draw date, at least one complete bet, and six winning numbers.</div>
     </section>
 
-    <footer class="footer">DigitalRose • <span id="version"></span> • <a href="docs/how-to-use.mp4" target="_blank" rel="noopener">▶ How-to video</a></footer>
+    <footer class="footer">DigitalRose Lotto Checker • <span id="version"></span> • <a href="docs/how-to-use.mp4" target="_blank" rel="noopener">▶ How-to video</a><br>Independent app — not affiliated with or endorsed by PCSO.</footer>
     <noscript><p class="status error">JavaScript is required for this checker.</p></noscript>
   </main>
 

@@ -180,7 +180,7 @@ def main():
         r = Recorder(page, tmp)
 
         # ---- intro
-        r.card(f"""<img src="icons/logo-512.png" alt=""><h1>PCSO Lotto Checker</h1>
+        r.card(f"""<img src="icons/logo-512.png" alt=""><h1>DigitalRose Lotto Checker</h1>
             <p>How to use · {version}</p><p style="margin-top:18px;color:#7ee6b1">Check all your bets against the official
             results in under a minute — even offline.</p>""")
         page.wait_for_timeout(300)
@@ -248,11 +248,11 @@ def main():
 
         # ---- 5. official results
         r.scroll_to("#resultsFill", 0.14)
-        r.caption(5, "Get the winning numbers", "Open <i>Scan or paste PCSO results</i>.")
+        r.caption(5, "Get the winning numbers", "Open <i>Scan or paste official results</i>.")
         r.hold(1.4)
         r.tap("#resultsFill summary")
         r.hold(0.6)
-        r.caption(5, "Paste the PCSO results",
+        r.caption(5, "Paste the official results",
                   "On pcso.gov.ph copy the results table — or copy the text from a screenshot in Photos — and paste it here.")
         r.scroll_to("#resultsText", 0.30, steps=6)
         r.tap("#resultsText", click=False)

@@ -121,7 +121,7 @@ function refreshDrawLock() {
   if (wasLocked && !locked) {
     const auto = autoFillWinning();
     setStatus('success', 'The draw has taken place — you can now enter the winning numbers.' +
-      (auto === 'filled' ? ' They were filled from your saved PCSO results.' : ''));
+      (auto === 'filled' ? ' They were filled from your saved official results.' : ''));
   }
 }
 
@@ -209,7 +209,7 @@ function wire() {
     persist();
     render();
     const auto = autoFillWinning();
-    setStatus('info', `${GAMES[i].name} selected. Its saved bets were loaded.` + (auto === 'filled' ? ' Winning numbers filled from saved PCSO results.' : ''));
+    setStatus('info', `${GAMES[i].name} selected. Its saved bets were loaded.` + (auto === 'filled' ? ' Winning numbers filled from saved official results.' : ''));
   }));
 
   $('#drawDate').addEventListener('change', e => {
@@ -218,7 +218,7 @@ function wire() {
     clearResults();
     showDateHint();
     applyDrawLock();
-    if (autoFillWinning() === 'filled') setStatus('info', 'Winning numbers filled from saved PCSO results.');
+    if (autoFillWinning() === 'filled') setStatus('info', 'Winning numbers filled from saved official results.');
   });
 
   $('#saveResults').addEventListener('click', importResults);
@@ -243,7 +243,7 @@ function wire() {
     if (!saved) return;
     draw().wins = saved.map(String);
     $('#useSaved').hidden = true;
-    afterEdit('Winning numbers replaced with the saved PCSO result.');
+    afterEdit('Winning numbers replaced with the saved official result.');
   });
 
   document.addEventListener('input', e => { if (e.target.classList?.contains('cell')) onCellInput(e); });
@@ -380,7 +380,7 @@ function autoFillWinning() {
 
   const hint = $('#winHint');
   hint.className = 'hint warn';
-  hint.textContent = `The saved PCSO result for this draw is ${fmtNums(saved)}, which is different from the numbers entered.`;
+  hint.textContent = `The saved official result for this draw is ${fmtNums(saved)}, which is different from the numbers entered.`;
   btn.hidden = false;
   return 'differs';
 }
@@ -403,7 +403,7 @@ function importResults() {
   const text = $('#resultsText').value;
   const hint = $('#resultsHint');
   hint.className = 'hint';
-  if (!text.trim()) { hint.textContent = 'Paste or scan the PCSO results first.'; return; }
+  if (!text.trim()) { hint.textContent = 'Paste or scan the official results first.'; return; }
 
   const parsed = parseResults(text, { fallbackDate: draw().date || null });
   // results can't exist for a draw that hasn't happened — almost always a wrong date
@@ -438,7 +438,7 @@ function importResults() {
   hint.className = notes.length ? 'hint warn' : 'hint';
   hint.textContent = notes.join(' ');
   setStatus(notes.length ? 'warn' : 'success',
-    `Saved ${parsed.results.length} PCSO result${parsed.results.length > 1 ? 's' : ''}` +
+    `Saved ${parsed.results.length} official result${parsed.results.length > 1 ? 's' : ''}` +
     (auto === 'filled' ? ' and filled the winning numbers.' : '.') + ' Please check them against the official results.',
     [...list, ...notes]);
 }
@@ -602,7 +602,7 @@ window.addEventListener('unhandledrejection', e => setStatus('error', 'Unexpecte
 build();
 render();
 renderSavedList();
-if (autoFillWinning() === 'filled') setStatus('info', 'Winning numbers filled from saved PCSO results.');
+if (autoFillWinning() === 'filled') setStatus('info', 'Winning numbers filled from saved official results.');
 if (initial.warning) {
   setStatus('warn', initial.warning);
   $('#saveState').textContent = '⚠ ' + initial.warning;
