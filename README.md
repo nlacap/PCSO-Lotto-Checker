@@ -11,6 +11,7 @@ css/styles.css        all styling
 js/config.js          games, number ranges, draw days, prize tiers, version
 js/validation.js      pure validation + matching logic (no DOM) — unit tested
 js/ticketParser.js    reads bets from scanned/pasted ticket text — unit tested
+js/resultsParser.js   reads official results copied/scanned from pcso.gov.ph — unit tested
 js/storage.js         load/save, schema repair, migration of old saved data
 js/picker.js          number-board overlay
 js/status.js          status message box
@@ -37,6 +38,19 @@ tests/                node:test unit tests
   Each line with six numbers (or a line starting A–F) becomes a bet; the game is read from the ticket when printed (6/49, SUPER, …).
   Lines that fail validation are listed, never silently kept.
 - **One row:** paste or scan `05-12-23-34-40-41` (any separators) into the first box of a row and it spreads across all six.
+
+## Saved PCSO results
+
+Open "Scan or paste PCSO results" in the winning-numbers card and paste the results table
+copied from pcso.gov.ph (or text copied from a screenshot with Live Text), then SAVE RESULTS.
+
+- Reads every 6/42–6/58 row (2D/3D/4D/6D are skipped), validates it, and saves it on this device
+  (`pcso-lotto-results-v1`, newest 60 draws per game).
+- Works whether the text comes row by row (Safari copy) or column by column (Live Text).
+  If the date column is cut off, the Draw Date set in the app is used.
+- Picking a game and draw date fills the winning numbers from a saved result. Numbers you typed
+  are never overwritten — if they differ, a USE SAVED PCSO RESULT button appears.
+- A saved official result for a date also silences the "not a usual draw day" warning.
 
 ## Tests
 

@@ -1,9 +1,11 @@
 // Static configuration. Nothing in here touches the DOM or storage.
 
-export const APP_VERSION = '2.1.0';
+export const APP_VERSION = '2.2.0';
 
 export const STORAGE_KEY = 'pcso-lotto-checker-v1'; // kept so existing saved bets still load
 export const BACKUP_KEY = STORAGE_KEY + '.backup';
+export const RESULTS_KEY = 'pcso-lotto-results-v1'; // official winning numbers saved on this device
+export const RESULTS_KEEP = 60;                     // draws kept per game
 export const SCHEMA_VERSION = 2;
 
 export const PICK_COUNT = 6; // numbers per bet / per draw

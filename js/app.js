@@ -5,7 +5,8 @@ import {
   sanitizeInput, validateSet, liveCheck, validateDrawDate,
   matchNumbers, prizeTier, findDuplicateBets,
 } from './validation.js';
-import { loadState, saveState, blankBets, blankRow } from './storage.js';
+import { loadState, saveState, blankBets, blankRow, loadResults, saveResults, mergeResults, findResult, latestResult } from './storage.js';
+import { parseResults } from './resultsParser.js';
 import { $, $$, el } from './dom.js';
 import { setStatus } from './status.js';
 import { createPicker } from './picker.js';
@@ -16,6 +17,7 @@ import { splitNumbers, parseTicket } from './ticketParser.js';
 const initial = loadState();
 let state = initial.state;
 const picker = createPicker();
+let results = loadResults(); // official winning numbers saved on this device
 
 const game = () => GAMES[state.game];
 const draw = () => state.byGame[state.game];
@@ -94,10 +96,17 @@ function liveValidate(key) {
   hint.textContent = errors.join(' ');
 }
 
+/** validateDrawDate, but a saved official PCSO result for that date overrides the draw-day guess. */
+function checkDate(iso) {
+  const r = validateDrawDate(iso, game());
+  if (r.ok && findResult(results, state.game, iso)) r.warnings = r.warnings.filter(w => !w.includes('normally drawn'));
+  return r;
+}
+
 function showDateHint() {
   const hint = $('#dateHint');
   const d = draw().date;
-  const r = d ? validateDrawDate(d, game()) : { ok: true, warnings: [] };
+  const r = d ? checkDate(d) : { ok: true, warnings: [] };
   hint.className = 'hint' + (r.ok ? ' warn' : '');
   hint.textContent = r.ok ? r.warnings.join(' ') : r.error;
 }
@@ -162,7 +171,8 @@ function wire() {
     state.game = i;
     persist();
     render();
-    setStatus('info', `${GAMES[i].name} selected. Its saved bets were loaded.`);
+    const auto = autoFillWinning();
+    setStatus('info', `${GAMES[i].name} selected. Its saved bets were loaded.` + (auto === 'filled' ? ' Winning numbers filled from saved PCSO results.' : ''));
   }));
 
   $('#drawDate').addEventListener('change', e => {
@@ -170,6 +180,32 @@ function wire() {
     persist();
     clearResults();
     showDateHint();
+    if (autoFillWinning() === 'filled') setStatus('info', 'Winning numbers filled from saved PCSO results.');
+  });
+
+  $('#saveResults').addEventListener('click', importResults);
+  $('#resultsText').addEventListener('input', () => { $('#resultsHint').textContent = ''; });
+  $('#clearResultsText').addEventListener('click', () => {
+    $('#resultsText').value = '';
+    $('#resultsHint').textContent = '';
+    $('#resultsText').focus();
+  });
+  $('#savedList').addEventListener('click', e => {
+    const b = e.target.closest('.savedItem');
+    if (!b) return;
+    state.game = Number(b.dataset.game);
+    draw().date = b.dataset.date;
+    persist();
+    render();
+    const auto = autoFillWinning();
+    setStatus('info', `${game().name} draw ${b.dataset.date} selected.` + (auto === 'filled' ? ' Winning numbers filled.' : ''));
+  });
+  $('#useSaved').addEventListener('click', () => {
+    const saved = findResult(results, state.game, draw().date);
+    if (!saved) return;
+    draw().wins = saved.map(String);
+    $('#useSaved').hidden = true;
+    afterEdit('Winning numbers replaced with the saved PCSO result.');
   });
 
   document.addEventListener('input', e => { if (e.target.classList?.contains('cell')) onCellInput(e); });
@@ -270,6 +306,92 @@ function applyBets(r, hint, gameIndex) {
     `Filled ${r.bets.length} bet${r.bets.length > 1 ? 's' : ''} for ${game().name}${r.gameDetected ? ' (game read from ticket)' : ''}. Please check them against your ticket.`, notes);
 }
 
+// ---------------------------------------------------------------- saved PCSO results
+
+const fmtNums = nums => nums.map(n => String(n).padStart(2, '0')).join('-');
+const fmtDate = iso => {
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+};
+
+/**
+ * Fill the winning boxes from a saved result for the current game and date.
+ * Never overwrites numbers the user typed: if they differ, offer a button instead.
+ * @returns {'filled'|'same'|'differs'|'none'}
+ */
+function autoFillWinning() {
+  const btn = $('#useSaved');
+  btn.hidden = true;
+  const saved = findResult(results, state.game, draw().date);
+  if (!saved) return 'none';
+
+  const current = draw().wins;
+  if (current.every(v => !v)) {
+    draw().wins = saved.map(String);
+    persist();
+    render();
+    return 'filled';
+  }
+  const typed = validateSet(current, game().max);
+  if (typed.status === 'ok' && typed.numbers.join() === saved.join()) return 'same';
+
+  const hint = $('#winHint');
+  hint.className = 'hint warn';
+  hint.textContent = `The saved PCSO result for this draw is ${fmtNums(saved)}, which is different from the numbers entered.`;
+  btn.hidden = false;
+  return 'differs';
+}
+
+function renderSavedList() {
+  const items = GAMES.map((g, gi) => ({ g, gi, r: latestResult(results, gi) })).filter(x => x.r);
+  const box = $('#savedList');
+  if (!items.length) { box.replaceChildren(); return; }
+  box.replaceChildren(
+    el('div', { class: 'savedTitle' }, 'Latest saved results (tap to use):'),
+    ...items.map(({ g, gi, r }) => el('button', { class: 'savedItem', type: 'button', 'data-game': gi, 'data-date': r.date }, [
+      el('span', { class: 'savedGame' }, g.id),
+      el('span', { class: 'savedDate' }, fmtDate(r.date)),
+      el('span', { class: 'savedNums' }, fmtNums(r.numbers)),
+    ])),
+  );
+}
+
+function importResults() {
+  const text = $('#resultsText').value;
+  const hint = $('#resultsHint');
+  hint.className = 'hint';
+  if (!text.trim()) { hint.textContent = 'Paste or scan the PCSO results first.'; return; }
+
+  const parsed = parseResults(text, { fallbackDate: draw().date || null });
+  if (!parsed.results.length) {
+    hint.textContent = 'No 6-number lotto results found.' + (parsed.rejected.length ? ' ' + parsed.rejected.join(' ') : ' Copy the rows that show the game, combination and draw date.');
+    return;
+  }
+
+  const merged = mergeResults(results, parsed.results);
+  const saved = saveResults(merged.db);
+  results = merged.db;
+
+  // point the current game at the newest imported draw if no date is set yet
+  if (!draw().date) {
+    const mine = parsed.results.filter(r => r.gameIndex === state.game).map(r => r.date).sort();
+    if (mine.length) { draw().date = mine[mine.length - 1]; persist(); render(); }
+  }
+  const auto = autoFillWinning();
+  renderSavedList();
+
+  const list = parsed.results.map(r => `${GAMES[r.gameIndex].id} ${fmtDate(r.date)}: ${fmtNums(r.numbers)}`);
+  const notes = [...parsed.rejected];
+  if (merged.changed) notes.push(`${merged.changed} saved result${merged.changed > 1 ? 's were' : ' was'} replaced with the new numbers.`);
+  if (!saved.ok) notes.push(saved.error);
+  hint.className = notes.length ? 'hint warn' : 'hint';
+  hint.textContent = notes.join(' ');
+  setStatus(notes.length ? 'warn' : 'success',
+    `Saved ${parsed.results.length} PCSO result${parsed.results.length > 1 ? 's' : ''}` +
+    (auto === 'filled' ? ' and filled the winning numbers.' : '.') + ' Please check them against the official results.',
+    [...list, ...notes]);
+}
+
 function afterEdit(message) {
   persist();
   render();
@@ -289,7 +411,7 @@ function compare() {
   const problems = [];
   const warnings = [];
 
-  const date = validateDrawDate(d.date, g);
+  const date = checkDate(d.date);
   if (!date.ok) problems.push(date.error);
   else warnings.push(...date.warnings);
 
@@ -377,6 +499,8 @@ window.addEventListener('unhandledrejection', e => setStatus('error', 'Unexpecte
 
 build();
 render();
+renderSavedList();
+if (autoFillWinning() === 'filled') setStatus('info', 'Winning numbers filled from saved PCSO results.');
 if (initial.warning) {
   setStatus('warn', initial.warning);
   $('#saveState').textContent = '⚠ ' + initial.warning;

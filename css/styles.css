@@ -350,3 +350,49 @@ input[type=date] {
   color: white;
   resize: vertical;
 }
+
+/* ---- saved PCSO results ---- */
+.useSaved {
+  width: 100%;
+  margin-top: 8px;
+  background: #314969;
+}
+.savedList:empty {
+  display: none;
+}
+.savedList {
+  margin-top: 12px;
+}
+.savedTitle {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+.savedItem {
+  display: flex;
+  width: 100%;
+  gap: 10px;
+  align-items: baseline;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #0b2145;
+  color: white;
+  padding: 9px 10px;
+  margin-top: 6px;
+  font-size: 13px;
+}
+.savedGame {
+  font-weight: 900;
+  color: #6dd4ff;
+  min-width: 36px;
+}
+.savedDate {
+  color: var(--muted);
+  min-width: 82px;
+}
+.savedNums {
+  font: 700 13px ui-monospace, Menlo, monospace;
+  margin-left: auto;
+}

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { loadState, saveState, sanitizeState, defaultState } from '../js/storage.js';
+import { loadState, saveState, sanitizeState, defaultState, sanitizeResults, mergeResults, findResult, latestResult, loadResults, saveResults } from '../js/storage.js';
 import { STORAGE_KEY, BACKUP_KEY, GAMES } from '../js/config.js';
 
 const memStore = (init = {}) => {
@@ -58,4 +58,26 @@ test('save failure is reported, not thrown', () => {
 test('missing storage is reported', () => {
   assert.ok(loadState(null).warning);
   assert.equal(saveState(defaultState(), null).ok, false);
+});
+
+test('results: merge, find, latest, round trip', () => {
+  let { db, added } = mergeResults({}, [
+    { gameIndex: 4, date: '2026-10-07', numbers: [2, 14, 29, 30, 33, 38] },
+    { gameIndex: 4, date: '2026-10-05', numbers: [1, 2, 3, 4, 5, 6] },
+  ]);
+  assert.equal(added, 2);
+  assert.deepEqual(findResult(db, 4, '2026-10-05'), [1, 2, 3, 4, 5, 6]);
+  assert.equal(findResult(db, 4, '2026-10-06'), null);
+  assert.equal(latestResult(db, 4).date, '2026-10-07');
+  const again = mergeResults(db, [{ gameIndex: 4, date: '2026-10-07', numbers: [2, 14, 29, 30, 33, 38] }]);
+  assert.equal(again.same, 1);
+  const s = memStore();
+  assert.equal(saveResults(again.db, s).ok, true);
+  assert.deepEqual(loadResults(s), again.db);
+});
+
+test('results: damaged entries are dropped', () => {
+  const db = sanitizeResults({ 0: { '2026-10-08': [1, 2, 3, 4, 5, 99], 'bad': [1, 2, 3, 4, 5, 6], '2026-10-06': [6, 5, 4, 3, 2, 1] }, 9: {} });
+  assert.deepEqual(db, { 0: { '2026-10-06': [1, 2, 3, 4, 5, 6] } });
+  assert.deepEqual(loadResults(memStore({ 'pcso-lotto-results-v1': '{oops' })), {});
 });

@@ -1,7 +1,8 @@
 // Persistence: load/save with schema checks, migration and safe failure.
 // `store` is injectable so the logic can be tested without a browser.
 
-import { STORAGE_KEY, BACKUP_KEY, SCHEMA_VERSION, GAMES, BET_SLOTS, PICK_COUNT } from './config.js';
+import { STORAGE_KEY, BACKUP_KEY, RESULTS_KEY, RESULTS_KEEP, SCHEMA_VERSION, GAMES, BET_SLOTS, PICK_COUNT } from './config.js';
+import { validateSet, parseIsoDate } from './validation.js';
 
 const defaultStore = () => {
   try { return globalThis.localStorage ?? null; } catch { return null; }
@@ -75,4 +76,64 @@ export function saveState(state, store = defaultStore()) {
     const full = e && (e.name === 'QuotaExceededError' || e.code === 22);
     return { ok: false, error: full ? 'Device storage is full — changes are not being saved.' : 'Could not save — changes are not being saved.' };
   }
+}
+
+// ---------------------------------------------------------------- official results
+// Shape: { "<gameIndex>": { "YYYY-MM-DD": [n1..n6 sorted] } }
+
+/** Keep only well-formed entries, newest RESULTS_KEEP per game. */
+export function sanitizeResults(raw) {
+  const out = {};
+  GAMES.forEach((g, gi) => {
+    const src = raw && typeof raw === 'object' ? raw[gi] : null;
+    if (!src || typeof src !== 'object') return;
+    const entries = Object.entries(src)
+      .filter(([date, nums]) => parseIsoDate(date) && Array.isArray(nums) &&
+        validateSet(nums.map(String), g.max).status === 'ok')
+      .map(([date, nums]) => [date, validateSet(nums.map(String), g.max).numbers])
+      .sort((a, b) => b[0].localeCompare(a[0]))
+      .slice(0, RESULTS_KEEP);
+    if (entries.length) out[gi] = Object.fromEntries(entries);
+  });
+  return out;
+}
+
+/** Merge parsed results into the saved set. Pure. */
+export function mergeResults(db, results) {
+  const next = JSON.parse(JSON.stringify(db || {}));
+  const counts = { added: 0, changed: 0, same: 0 };
+  results.forEach(({ gameIndex, date, numbers }) => {
+    next[gameIndex] ??= {};
+    const old = next[gameIndex][date];
+    if (!old) counts.added++;
+    else if (old.join() === numbers.join()) counts.same++;
+    else counts.changed++;
+    next[gameIndex][date] = numbers;
+  });
+  return { db: sanitizeResults(next), ...counts };
+}
+
+/** Saved result for a game and date, or null. */
+export function findResult(db, gameIndex, date) {
+  return db?.[gameIndex]?.[date] ?? null;
+}
+
+/** Newest saved draw for a game: {date, numbers} or null. */
+export function latestResult(db, gameIndex) {
+  const dates = Object.keys(db?.[gameIndex] ?? {}).sort();
+  const date = dates[dates.length - 1];
+  return date ? { date, numbers: db[gameIndex][date] } : null;
+}
+
+export function loadResults(store = defaultStore()) {
+  try {
+    const text = store?.getItem(RESULTS_KEY);
+    return text ? sanitizeResults(JSON.parse(text)) : {};
+  } catch { return {}; }
+}
+
+export function saveResults(db, store = defaultStore()) {
+  if (!store) return { ok: false, error: 'Storage is not available — results were not saved.' };
+  try { store.setItem(RESULTS_KEY, JSON.stringify(db)); return { ok: true, error: null }; }
+  catch { return { ok: false, error: 'Could not save the results on this device.' }; }
 }
