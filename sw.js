@@ -7,7 +7,7 @@
 //
 // Bump CACHE when the list of files changes.
 
-const CACHE = 'pcso-lotto-v14';
+const CACHE = 'pcso-lotto-v15';
 const ASSETS = [
   './',
   './index.html',
@@ -55,6 +55,9 @@ const cacheIfOk = (req, resp) => {
 self.addEventListener('fetch', event => {
   const req = event.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
+  // Leave video to the browser: iOS Safari streams it with range requests,
+  // which a cached full response would break.
+  if (/\.(mp4|mov|webm)$/i.test(new URL(req.url).pathname)) return;
 
   if (req.mode === 'navigate') {
     event.respondWith(
